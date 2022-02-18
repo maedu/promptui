@@ -506,6 +506,12 @@ type SelectWithAdd struct {
 	// If the value is valid, it is returned to the callee to be added in the list.
 	Validate ValidateFunc
 
+	// Size is the number of items that should appear on the select before scrolling is necessary. Defaults to 5.
+	Size int
+
+	// CursorPos is the initial position of the cursor.
+	CursorPos int
+
 	// IsVimMode sets whether to use vim mode when using readline in the command prompt. Look at
 	// https://godoc.org/github.com/chzyer/readline#Config for more information on readline.
 	IsVimMode bool
@@ -528,7 +534,7 @@ func (sa *SelectWithAdd) Run() (int, string, error) {
 	if len(sa.Items) > 0 {
 		newItems := append([]string{sa.AddLabel}, sa.Items...)
 
-		list, err := list.New(newItems, 5)
+		list, err := list.New(newItems, sa.Size)
 		if err != nil {
 			return 0, "", err
 		}
@@ -536,9 +542,10 @@ func (sa *SelectWithAdd) Run() (int, string, error) {
 		s := Select{
 			Label:     sa.Label,
 			Items:     newItems,
+			CursorPos: sa.CursorPos,
 			IsVimMode: sa.IsVimMode,
 			HideHelp:  sa.HideHelp,
-			Size:      5,
+			Size:      sa.Size,
 			list:      list,
 			Pointer:   sa.Pointer,
 		}
@@ -549,7 +556,7 @@ func (sa *SelectWithAdd) Run() (int, string, error) {
 			return 0, "", err
 		}
 
-		selected, value, err := s.innerRun(1, 0, '+')
+		selected, value, err := s.innerRun(sa.CursorPos, 0, '+')
 		if err != nil || selected != 0 {
 			return selected - 1, value, err
 		}
